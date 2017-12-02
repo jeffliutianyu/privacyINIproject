@@ -1,11 +1,14 @@
 from selenium import webdriver as wd
-import sys, time, re, argparse
+import sys, re, time, argparse
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-site = 'orbitz'
-results = 30
+# NOTE: For ebay, we take the product id instead of product name due to repeated product name
+
+site = 'ebay'
+search = 'back support'
 num_block = 10
+results = 30
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--usa", help="compare two usa cities", action="store_true")
@@ -49,12 +52,13 @@ else:
     parser.print_help()
     sys.exit(1)	
 
-f1 = open(site + '_' + country + '.txt','wb')
+#open files
+f1 = open(site + '_' + country + '.txt', 'wb')
 
 for i in range(num_block):
-
-    print site + ' ' + country + ' block ' + str(i+1) + ' started'
     
+    print site + ' ' + country + ' block ' + str(i+1) + ' started'
+
     if args.usa:     
         #set firefox profiles
         profile1 = wd.FirefoxProfile()
@@ -449,167 +453,107 @@ for i in range(num_block):
     browser4 = wd.Firefox(firefox_profile=profile4)
     browser4.set_window_position(2, 2)
     browser4.set_window_size(560, 280)
-    
-    # 1st agent location1
-    browser1.get('https://www.orbitz.com/Hotel-Search?#&destination=Singapore%20(all)%2C%20Singapore&startDate=12/12/2017&endDate=12/30/2017&regionId=180027&latLong=1.290270,103.852010&adults=2') #go to site
 
-    default = browser1.window_handles[0] #get the handle number for default window`
-    #print 'browser handle is: ' + str(default)
+    browser1.get('https://www.' + site + '.com/')
+    browser1.implicitly_wait(5)
+    browser1.find_element_by_xpath('//*[@id="gh-ac"]').send_keys(search)
+    browser1.find_element_by_xpath('//*[@id="gh-btn"]').click()
 
-    browser1.switch_to.window(default)
-    #print 'current url is: ' + str(browser1.current_url)
+    browser2.get('https://www.' + site + '.com/')
+    browser2.implicitly_wait(5)
+    browser2.find_element_by_xpath('//*[@id="gh-ac"]').send_keys(search)
+    browser2.find_element_by_xpath('//*[@id="gh-btn"]').click()
+
+    browser3.get('https://www.' + site + '.com/')
+    browser3.implicitly_wait(5)
+    browser3.find_element_by_xpath('//*[@id="gh-ac"]').send_keys(search)
+    browser3.find_element_by_xpath('//*[@id="gh-btn"]').click()    
+
+    browser4.get('https://www.' + site + '.com/')
+    browser4.implicitly_wait(5)
+    browser4.find_element_by_xpath('//*[@id="gh-ac"]').send_keys(search)
+    browser4.find_element_by_xpath('//*[@id="gh-btn"]').click()
+        
+    time.sleep(2)
+    #print 'browser 1: ' + str(browser1.current_url)
+    print 'Agent 1 start '+ 'block ' + str(i+1) + ' ' + location1
     
-    time.sleep(5)
+    products = browser1.find_elements_by_css_selector('.lvpic.pic.img.left')    
+    prices = browser1.find_elements_by_xpath("//span[contains(@class,'bold')]")    
     num_results = 0
-    print 'Agent 1 started '+ 'block ' + str(i+1) + ' ' + location1
-
-    prices = browser1.find_elements_by_xpath('//article[@id]')
-    products = prices
-
-    for price,product in map(None, prices, products):        
-        if num_results < results:
-            new_product = product.text
-            new_product,sep,tail = new_product.partition('\n')
-            new_product = re.sub(',', ' ', new_product)
-            new_price = price.text
-            
-            if 'Price is now:' in new_price:
-                head,sep,new_price = new_price.partition('Price is now:')
-                new_price,sep,tail = new_price.partition('Price is')
-                
-            elif 'This crossed out price reflects the standard hotel rate.'	in new_price:
-                head,sep,new_price = new_price.partition('This crossed out price reflects the standard hotel rate.')
-                new_price,sep,tail = new_price.partition('Price is')
-                #new_price,sep,tail = new_price.partition('\n')
-            
-            new_price = re.sub('[^0-9\.]', '', new_price)
-            num_results = num_results+1    
-            f1.write('%s,%d,%d,%d,%s,%s\n'%(location1,i+1,1,num_results,new_product,new_price))    
-    print 'Agent 1 done '+ 'block ' + str(i+1) + ' ' + location1
-
-    # 1st agent location1
-    browser2.get('https://www.orbitz.com/Hotel-Search?#&destination=Singapore%20(all)%2C%20Singapore&startDate=12/12/2017&endDate=12/30/2017&regionId=180027&latLong=1.290270,103.852010&adults=2') #go to site
-
-    default = browser2.window_handles[0] #get the handle number for default window`
-    #print 'browser handle is: ' + str(default)
-
-    browser2.switch_to.window(default)
-    #print 'current url is: ' + str(browser2.current_url)
     
-    time.sleep(5)
-    num_results = 0
-    print 'Agent 2 started '+ 'block ' + str(i+1) + ' ' + location1
-
-    prices = browser2.find_elements_by_xpath('//article[@id]')
-    products = prices
-
-    for price,product in map(None, prices, products):        
+    for price, product in map(None, prices,products):
         if num_results < results:
-            new_product = product.text
-            new_product,sep,tail = new_product.partition('\n')
-            new_product = re.sub(',', ' ', new_product)
-            new_price = price.text
-            
-            if 'Price is now:' in new_price:
-                head,sep,new_price = new_price.partition('Price is now:')
-                new_price,sep,tail = new_price.partition('Price is')
-                
-            elif 'This crossed out price reflects the standard hotel rate.'	in new_price:
-                head,sep,new_price = new_price.partition('This crossed out price reflects the standard hotel rate.')
-                new_price,sep,tail = new_price.partition('Price is')
-                #new_price,sep,tail = new_price.partition('\n')
-            
-            new_price = re.sub('[^0-9\.]', '', new_price)
-            num_results = num_results+1
-            f1.write('%s,%d,%d,%d,%s,%s\n'%(location1,i+1,2,num_results,new_product,new_price)) 
+            product_name = product.get_attribute("iid")
+            #print product_name
+            price = price.text
+            price = re.sub('[^0-9\.]', ' ', price)
+            price, sep, tail = price.partition('   ')
+            price = re.sub('[^0-9\.]', '', price)
+            f1.write('%s,%d,%d,%d,%s,%s\n'%(location1,i+1,1,num_results+1,str(product_name),str(price)))
+            num_results = num_results + 1
+    time.sleep(2) 
+    print 'Agent 1 done '+ 'block ' + str(i+1) + ' ' + location1	
 
+    print 'Agent 2 start '+ 'block ' + str(i+1) + ' ' + location1
+    #print 'browser 2: ' + str(browser2.current_url)
+        
+    products = browser2.find_elements_by_css_selector('.lvpic.pic.img.left')    
+    prices = browser2.find_elements_by_xpath("//span[contains(@class,'bold')]")    
+    num_results = 0
+    
+    for price, product in map(None, prices,products):
+        if num_results < results:
+            product_name = product.get_attribute("iid")
+            price = price.text
+            price = re.sub('[^0-9\.]', ' ', price)
+            price, sep, tail = price.partition('   ')
+            price = re.sub('[^0-9\.]', '', price)
+            f1.write('%s,%d,%d,%d,%s,%s\n'%(location1,i+1,2,num_results+1,str(product_name),str(price)))
+            num_results = num_results + 1
+    time.sleep(2) 
     print 'Agent 2 done '+ 'block ' + str(i+1) + ' ' + location1
 
-    # 2nd agent location1
-    browser3.get('https://www.orbitz.com/Hotel-Search?#&destination=Singapore%20(all)%2C%20Singapore&startDate=12/12/2017&endDate=12/30/2017&regionId=180027&latLong=1.290270,103.852010&adults=2') #go to site
-
-    default = browser3.window_handles[0] #get the handle number for default window`
-    #print 'browser handle is: ' + str(default)
-
-    browser3.switch_to.window(default)
-    #print 'current url is: ' + str(browser3.current_url)
-    
-    time.sleep(5)
+    print 'Agent 3 start '+ 'block ' + str(i+1) + ' ' + location2
+    #print 'browser 3: ' + str(browser3.current_url)
+        
+    products = browser3.find_elements_by_css_selector('.lvpic.pic.img.left')    
+    prices = browser3.find_elements_by_xpath("//span[contains(@class,'bold')]")    
     num_results = 0
-    print 'Agent 3 started '+ 'block ' + str(i+1) + ' ' + location2
-
-    prices = browser3.find_elements_by_xpath('//article[@id]')
-    products = prices
-
-    for price,product in map(None, prices, products):        
+    
+    for price, product in map(None, prices,products):
         if num_results < results:
-            new_product = product.text
-            new_product,sep,tail = new_product.partition('\n')
-            new_product = re.sub(',', ' ', new_product)
-            new_price = price.text
-            
-            if 'Price is now:' in new_price:
-                head,sep,new_price = new_price.partition('Price is now:')
-                new_price,sep,tail = new_price.partition('Price is')
-                
-            elif 'This crossed out price reflects the standard hotel rate.'	in new_price:
-                head,sep,new_price = new_price.partition('This crossed out price reflects the standard hotel rate.')
-                new_price,sep,tail = new_price.partition('Price is')
-                #new_price,sep,tail = new_price.partition('\n')
-            
-            new_price = re.sub('[^0-9\.]', '', new_price)
-            num_results = num_results+1
-            f1.write('%s,%d,%d,%d,%s,%s\n'%(location2,i+1,3,num_results,new_product,new_price))       
+            product_name = product.get_attribute("iid")
+            price = price.text
+            price = re.sub('[^0-9\.]', ' ', price)
+            price, sep, tail = price.partition('   ')
+            price = re.sub('[^0-9\.]', '', price)
+            f1.write('%s,%d,%d,%d,%s,%s\n'%(location2,i+1,3,num_results+1,str(product_name),str(price)))
+            num_results = num_results + 1
     print 'Agent 3 done '+ 'block ' + str(i+1) + ' ' + location2
 
-    # 2nd agent location1
-    browser4.get('https://www.orbitz.com/Hotel-Search?#&destination=Singapore%20(all)%2C%20Singapore&startDate=12/12/2017&endDate=12/30/2017&regionId=180027&latLong=1.290270,103.852010&adults=2') #go to site
-
-    default = browser4.window_handles[0] #get the handle number for default window`
-    #print 'browser handle is: ' + str(default)
-
-    browser4.switch_to.window(default)
-    #print 'current url is: ' + str(browser4.current_url)
-    
-    time.sleep(5)
+    print 'Agent 4 start '+ 'block ' + str(i+1) + ' ' + location2
+    #print 'browser 4: ' + str(browser4.current_url)
+        
+    products = browser4.find_elements_by_css_selector('.lvpic.pic.img.left')    
+    prices = browser4.find_elements_by_xpath("//span[contains(@class,'bold')]")    
     num_results = 0
-    print 'Agent 4 started '+ 'block ' + str(i+1) + ' ' + location2
-
-    prices = browser4.find_elements_by_xpath('//article[@id]')
-    products = prices
-
-    for price,product in map(None, prices, products):        
+    
+    for price, product in map(None, prices,products):
         if num_results < results:
-            new_product = product.text
-            new_product,sep,tail = new_product.partition('\n')
-            new_product = re.sub(',', ' ', new_product)
-            new_price = price.text
-            
-            if 'Price is now:' in new_price:
-                head,sep,new_price = new_price.partition('Price is now:')
-                new_price,sep,tail = new_price.partition('Price is')
-                
-            elif 'This crossed out price reflects the standard hotel rate.'	in new_price:
-                head,sep,new_price = new_price.partition('This crossed out price reflects the standard hotel rate.')
-                new_price,sep,tail = new_price.partition('Price is')
-                #new_price,sep,tail = new_price.partition('\n')
-            
-            new_price = re.sub('[^0-9\.]', '', new_price)
-            num_results = num_results+1
-            f1.write('%s,%d,%d,%d,%s,%s\n'%(location2,i+1,4,num_results,new_product,new_price)) 
-	
-    print 'Agent 4 done '+ 'block ' + str(i+1) + ' ' + location2
+            product_name = product.get_attribute("iid")
+            price = price.text
+            price = re.sub('[^0-9\.]', ' ', price)
+            price, sep, tail = price.partition('   ')
+            price = re.sub('[^0-9\.]', '', price)
+            f1.write('%s,%d,%d,%d,%s,%s\n'%(location2,i+1,4,num_results+1,str(product_name),str(price)))
+            num_results = num_results + 1
+    time.sleep(2)
+    print 'Agent 4 done '+ 'block ' + str(i+1) + ' ' + location2	
     browser1.quit()
     browser2.quit()
     browser3.quit()
     browser4.quit()
-    print site + ' ' + country + ' block ' + str(i+1) + ' completed'
+    print site + ' ' + country + ' block ' + str(i+1) + ' completed'    
+
 f1.close()
-
-
-
-
-
-
-
-
