@@ -25,25 +25,25 @@ parser.add_argument("--usa_vs_indo", help="compare two countries usa and indones
 args = parser.parse_args()
 
 if args.usa:
-    location = ['AH','LA']
+    location = ['AH','LA'] #use sorted list, number of cities fixed
     country = 'usa'
 elif args.taiwan:
-    location = ['hsinchu','taipei']
+    location = ['hsinchu','taipei'] #use sorted list, number of cities fixed
     country = 'taiwan'
 elif args.indonesia:
-    location = ['jakarta','makasser']
+    location = ['jakarta','makasser'] #use sorted list, number of cities fixed
     country = 'indonesia'
 elif args.germany:
-    location = ['baden','kiez']
+    location = ['baden','kiez'] #use sorted list, number of cities fixed
     country = 'germany'
 elif args.china:
-    location = ['beijing','nanning']
+    location = ['beijing','nanning'] #use sorted list, number of cities fixed
     country = 'china'
 elif args.brazil:
-    location = ['osasco','parana']
+    location = ['osasco','parana'] #use sorted list, number of cities fixed
     country = 'brazil'
 elif args.usa_vs_indo:
-    location = ['indonesia','usa']
+    location = ['indonesia','usa'] #use sorted list
     country = 'usa_vs_indonesia'
 else:
     parser.print_help()
@@ -65,7 +65,7 @@ browsers.sort()
 locations.sort()
 
 #open files to write
-f1 = open(site + '_' + country + '.txt', 'wb')
+f = open(site + '_' + country + '.txt', 'wb')
 
 for i in range(num_block):   
     print site + ' ' + country + ' block ' + str(i+1) + ' started'
@@ -296,11 +296,11 @@ for i in range(num_block):
                 price = re.sub('[^0-9\.]', ' ', price)
                 price, sep, tail = price.partition('   ')
                 price = re.sub('[^0-9\.]', '', price)
-                f1.write('%s,%d,%d,%d,%s,%s\n'%(locations[m],i+1,m+1,num_results+1,str(product_name),str(price)))
+                f.write('%s,%d,%d,%d,%s,%s\n'%(locations[m],i+1,m+1,num_results+1,str(product_name),str(price)))
                 num_results = num_results + 1
         print 'Agent' + str(m+1) + ' done block ' + str(i+1) + ' ' + str(locations[m]) 	
 
     for x in range(agents):
         browsers[x].quit()
     print site + ' ' + country + ' block ' + str(i+1) + ' completed'
-f1.close()
+f.close()
